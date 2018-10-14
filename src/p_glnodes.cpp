@@ -972,7 +972,7 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 			buildtime = (int32_t)(endTime - startTime);
 
 			// We have new GL-friendly nodes rebuilt. Let's send them to Gienek
-			for (auto &v : level.vertexes)
+			for (const auto &v : level.vertexes)
 			{
 				int16_t x = static_cast<int16_t>(v.p.X);
 				int16_t y = static_cast<int16_t>(v.p.Y);
@@ -985,8 +985,6 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 				memcpy(&buf[3], &y, 2);
 				boost::system::error_code ignored_error;
 				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-
-				v.set(double(x), double(y));
 			}
 		}
 	}
