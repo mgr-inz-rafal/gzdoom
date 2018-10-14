@@ -988,9 +988,6 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 
 				v.set(double(x), double(y));
 			}
-
-			int asd = 0;
-			++asd;
 		}
 	}
 
