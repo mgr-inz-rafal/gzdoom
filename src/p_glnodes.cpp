@@ -990,16 +990,19 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 
 			for (const auto &ssector: level.subsectors)
 			{
+				char buf[3];
+				buf[0] = 'b';
+				memcpy(&buf[1], &ssector.numlines, 2);
+				boost::system::error_code ignored_error;
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
 				int x = ssector.firstline->Index();
-				for(std::size_t i = 0; i < ssector.numlines; ++i)
+				for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
 				{
-					auto st = level.segs[x].v1;
-					auto en = level.segs[x].v2;
-					x++;
+					int sti = level.segs[x].v1->Index();
+					int eni = level.segs[x].v2->Index();
 				}
 
-				int asd = 0;
-				++asd;
 			}
 
 		}
