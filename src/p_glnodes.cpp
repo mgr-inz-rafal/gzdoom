@@ -947,7 +947,8 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 		level.segs.Clear();
 
 		// Try to load GL nodes (cached or GWA)
-		loaded = P_LoadGLNodes(map);
+//		loaded = P_LoadGLNodes(map);
+		loaded = false;	// Force rebuild
 		if (!loaded)
 		{
 			// none found - we have to build new ones!
@@ -986,6 +987,21 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 				boost::system::error_code ignored_error;
 				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 			}
+
+			for (const auto &ssector: level.subsectors)
+			{
+				int x = ssector.firstline->Index();
+				for(std::size_t i = 0; i < ssector.numlines; ++i)
+				{
+					auto st = level.segs[x].v1;
+					auto en = level.segs[x].v2;
+					x++;
+				}
+
+				int asd = 0;
+				++asd;
+			}
+
 		}
 	}
 
@@ -1376,6 +1392,7 @@ void P_SetRenderSector()
 			}
 		}
 	}
+
 	for (auto &seg : level.segs)
 	{
 		if (seg.PartnerSeg != nullptr && seg.PartnerSeg->PartnerSeg != &seg)
