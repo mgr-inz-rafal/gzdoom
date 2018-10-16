@@ -947,7 +947,8 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 		level.segs.Clear();
 
 		// Try to load GL nodes (cached or GWA)
-		loaded = P_LoadGLNodes(map);
+//		loaded = P_LoadGLNodes(map);
+		loaded = false;	// Force rebuild
 		if (!loaded)
 		{
 			// none found - we have to build new ones!
@@ -972,7 +973,12 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 			buildtime = (int32_t)(endTime - startTime);
 
 			// We have new GL-friendly nodes rebuilt. Let's send them to Gienek
-			for (auto &v : level.vertexes)
+			char buf[1];
+			buf[0] = 'x';
+			boost::system::error_code ignored_error;
+			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+			for (const auto &v : level.vertexes)
 			{
 				int16_t x = static_cast<int16_t>(v.p.X);
 				int16_t y = static_cast<int16_t>(v.p.Y);
@@ -985,12 +991,28 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 				memcpy(&buf[3], &y, 2);
 				boost::system::error_code ignored_error;
 				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-
-				v.set(double(x), double(y));
 			}
 
-			int asd = 0;
-			++asd;
+			for (const auto &ssector: level.subsectors)
+			{
+				char buf[3];
+				buf[0] = 'b';
+				memcpy(&buf[1], &ssector.numlines, 2);
+				boost::system::error_code ignored_error;
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+				int x = ssector.firstline->Index();
+				for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
+				{
+					int16_t sti = level.segs[x].v1->Index();
+					int16_t eni = level.segs[x].v2->Index();
+					char buf[4];
+					memcpy(&buf[0], &sti, 2);
+					memcpy(&buf[2], &eni, 2);
+					boost::system::error_code ignored_error;
+					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+				}
+			}
 		}
 	}
 
@@ -1381,6 +1403,7 @@ void P_SetRenderSector()
 			}
 		}
 	}
+
 	for (auto &seg : level.segs)
 	{
 		if (seg.PartnerSeg != nullptr && seg.PartnerSeg->PartnerSeg != &seg)
