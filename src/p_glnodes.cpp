@@ -1013,6 +1013,10 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 				}
 			}
+
+			// Notify Gienek that entire map has been sent
+			buf[0] = 'f';
+			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 		}
 	}
 
