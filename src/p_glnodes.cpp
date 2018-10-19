@@ -933,7 +933,7 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 	bool loaded = false;
 
 	// If the map loading code has performed a node rebuild we don't need to check for it again.
-	if (!rebuilt && !P_CheckForGLNodes())
+//	if (!rebuilt && !P_CheckForGLNodes())
 	{
 		ret = true;	// we are not using the level's original nodes if we get here.
 		for (auto &sub : level.subsectors)
