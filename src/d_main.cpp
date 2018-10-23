@@ -29,6 +29,9 @@
 // HEADER FILES ------------------------------------------------------------
 
 #include <boost/asio.hpp>
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <vector>
 using boost::asio::ip::tcp;
 
 #ifdef _WIN32
@@ -109,7 +112,7 @@ EXTERN_CVAR(Bool, hud_althud)
 EXTERN_CVAR(Int, vr_mode)
 void DrawHUD();
 void D_DoAnonStats();
-
+bool gienek_enabled = false;
 
 // MACROS ------------------------------------------------------------------
 
@@ -166,10 +169,16 @@ tcp::socket gienek_socket(io_context);
 
 tcp::socket* gienek_global_socket;
 
-void Gienek_Init()
+void Gienek_Init(const char* address)
 {
+	std::vector<std::string> parts;
+	boost::split(parts, address, [](char c){return c == ':';});
+	if(2 != parts.size())
+	{
+		throw std::invalid_argument("Correct format for specifying Gienek server is SERVERNAME:PORT");
+	}
 	tcp::resolver resolver(io_context);
-    tcp::resolver::results_type endpoints = resolver.resolve("localhost", "daytime");
+    tcp::resolver::results_type endpoints = resolver.resolve(parts.front(), parts.back());
 
     boost::asio::connect(gienek_socket, endpoints);
 	gienek_global_socket = &gienek_socket;
@@ -2526,8 +2535,24 @@ void D_DoomMain (void)
 		if (!batchrun) Printf("M_Init: Init menus.\n");
 		M_Init();
 
-		Printf("Gienek_Init: Connecting to Gienek AssAssYn\n");
-		Gienek_Init();
+		try {
+			p = Args->CheckParm ("-gienek");
+			if (p)
+			{
+				if(p+1 >= Args->NumArgs())
+				{
+					throw std::invalid_argument("Gienek_Init: Please specify server for the \"-gienek\" command line parameter\n");
+				}
+				auto gienek_address = Args->GetArg(p+1);
+				Printf("Gienek_Init: Connecting to Gienek AssAssYn an %s\n", gienek_address);
+				Gienek_Init(gienek_address);
+				gienek_enabled = true;
+			}
+		}
+		catch(const std::exception& e)
+		{
+			Printf(TEXTCOLOR_RED"Gienek_Init: Error: %s\n", e.what());
+		}
 
 		// clean up the compiler symbols which are not needed any longer.
 		RemoveUnusedSymbols();

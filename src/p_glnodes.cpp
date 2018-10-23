@@ -76,6 +76,7 @@ void P_LoadZNodes (FileReader &dalump, uint32_t id);
 static bool CheckCachedNodes(MapData *map);
 static void CreateCachedNodes(MapData *map);
 
+extern bool gienek_enabled;
 extern tcp::socket* gienek_global_socket;
 
 // fixed 32 bit gl_vert format v2.0+ (glBsp 1.91)
@@ -973,50 +974,53 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 			buildtime = (int32_t)(endTime - startTime);
 
 			// We have new GL-friendly nodes rebuilt. Let's send them to Gienek
-			char buf[1];
-			buf[0] = 'x';
-			boost::system::error_code ignored_error;
-			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-
-			for (const auto &v : level.vertexes)
+			if(gienek_enabled)
 			{
-				int16_t x = static_cast<int16_t>(v.p.X);
-				int16_t y = static_cast<int16_t>(v.p.Y);
-
-				// Report vertex to Gienek
-				// TODO: Take care of the network byte order!
-				char buf[5];
-				buf[0] = 'a';
-				memcpy(&buf[1], &x, 2);
-				memcpy(&buf[3], &y, 2);
-				boost::system::error_code ignored_error;
-				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-			}
-
-			for (const auto &ssector: level.subsectors)
-			{
-				char buf[3];
-				buf[0] = 'b';
-				memcpy(&buf[1], &ssector.numlines, 2);
+				char buf[1];
+				buf[0] = 'x';
 				boost::system::error_code ignored_error;
 				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
-				int x = ssector.firstline->Index();
-				for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
+				for (const auto &v : level.vertexes)
 				{
-					int16_t sti = level.segs[x].v1->Index();
-					int16_t eni = level.segs[x].v2->Index();
-					char buf[4];
-					memcpy(&buf[0], &sti, 2);
-					memcpy(&buf[2], &eni, 2);
+					int16_t x = static_cast<int16_t>(v.p.X);
+					int16_t y = static_cast<int16_t>(v.p.Y);
+
+					// Report vertex to Gienek
+					// TODO: Take care of the network byte order!
+					char buf[5];
+					buf[0] = 'a';
+					memcpy(&buf[1], &x, 2);
+					memcpy(&buf[3], &y, 2);
 					boost::system::error_code ignored_error;
 					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 				}
-			}
 
-			// Notify Gienek that entire map has been sent
-			buf[0] = 'f';
-			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+				for (const auto &ssector: level.subsectors)
+				{
+					char buf[3];
+					buf[0] = 'b';
+					memcpy(&buf[1], &ssector.numlines, 2);
+					boost::system::error_code ignored_error;
+					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+					int x = ssector.firstline->Index();
+					for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
+					{
+						int16_t sti = level.segs[x].v1->Index();
+						int16_t eni = level.segs[x].v2->Index();
+						char buf[4];
+						memcpy(&buf[0], &sti, 2);
+						memcpy(&buf[2], &eni, 2);
+						boost::system::error_code ignored_error;
+						boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+					}
+				}
+
+				// Notify Gienek that entire map has been sent
+				buf[0] = 'f';
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			}
 		}
 	}
 
