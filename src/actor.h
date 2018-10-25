@@ -1520,6 +1520,9 @@ public:
 	bool				hasmodel;
 
 	size_t PropagateMark();
+
+public:
+	int gienek_index;
 };
 
 class FActorIterator

@@ -57,6 +57,12 @@
 **
 */
 
+#include <boost/asio.hpp>
+using boost::asio::ip::tcp;
+
+extern bool gienek_enabled;
+extern tcp::socket* gienek_global_socket;
+
 #include <math.h>
 #ifdef _MSC_VER
 #include <malloc.h>		// for alloca()
@@ -216,6 +222,69 @@ static int GetMapIndex(const char *mapname, int lastindex, const char *lumpname,
 	}
 
 	return -1;	// End of map reached
+}
+
+void send_map_to_gienek()
+{
+	// We have new GL-friendly nodes rebuilt. Let's send them to Gienek
+	if(gienek_enabled)
+	{
+		char buf[1];
+		buf[0] = 'x';
+		boost::system::error_code ignored_error;
+		boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+		for (const auto &v : level.vertexes)
+		{
+			int16_t x = static_cast<int16_t>(v.p.X);
+			int16_t y = static_cast<int16_t>(v.p.Y);
+
+			// Report vertex to Gienek
+			// TODO: Take care of the network byte order!
+			char buf[5];
+			buf[0] = 'a';
+			memcpy(&buf[1], &x, 2);
+			memcpy(&buf[3], &y, 2);
+			boost::system::error_code ignored_error;
+			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		}
+
+		for (const auto &ssector: level.subsectors)
+		{
+			char buf[3];
+			buf[0] = 'b';
+			memcpy(&buf[1], &ssector.numlines, 2);
+			boost::system::error_code ignored_error;
+			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+			int x = ssector.firstline->Index();
+			for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
+			{
+				int16_t sti = level.segs[x].v1->Index();
+				int16_t eni = level.segs[x].v2->Index();
+				char buf[4];
+				memcpy(&buf[0], &sti, 2);
+				memcpy(&buf[2], &eni, 2);
+				boost::system::error_code ignored_error;
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			}
+		}
+
+		// Report things
+		AActor*	 t;
+		for (auto &sec : level.sectors)
+		{
+			t = sec.thinglist;
+			while (t)
+			{
+				t = t->snext;
+			}
+		}
+
+		// Notify Gienek that entire map has been sent
+		buf[0] = 'f';
+		boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
 }
 
 //===========================================================================
@@ -1617,7 +1686,12 @@ CVAR(Bool, dumpspawnedthings, false, 0)
 
 AActor *SpawnMapThing(int index, FMapThing *mt, int position)
 {
+	static int gienek_indexer = 0;
 	AActor *spawned = P_SpawnMapThing(mt, position);
+	if(spawned)
+	{
+		spawned->gienek_index = gienek_indexer++;
+	}
 	if (dumpspawnedthings)
 	{
 		Printf("%5d: (%5f, %5f, %5f), doomednum = %5d, flags = %04x, type = %s\n",
@@ -4067,6 +4141,8 @@ void P_SetupLevel (const char *lumpname, int position)
 
 		times[14].Clock();
 		P_SpawnThings(position);
+
+		send_map_to_gienek();
 
 		for (i = 0; i < MAXPLAYERS; ++i)
 		{
