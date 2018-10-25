@@ -67,6 +67,8 @@
 
 void P_GetPolySpots (MapData * lump, TArray<FNodeBuilder::FPolyStart> &spots, TArray<FNodeBuilder::FPolyStart> &anchors);
 
+extern bool gienek_enabled;
+
 CVAR(Bool, gl_cachenodes, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR(Float, gl_cachetime, 0.6f, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
@@ -929,7 +931,7 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 	bool loaded = false;
 
 	// If the map loading code has performed a node rebuild we don't need to check for it again.
-//	if (!rebuilt && !P_CheckForGLNodes())
+	if (gienek_enabled || (!rebuilt && !P_CheckForGLNodes()))
 	{
 		ret = true;	// we are not using the level's original nodes if we get here.
 		for (auto &sub : level.subsectors)
@@ -943,8 +945,11 @@ bool P_CheckNodes(MapData * map, bool rebuilt, int buildtime)
 		level.segs.Clear();
 
 		// Try to load GL nodes (cached or GWA)
-//		loaded = P_LoadGLNodes(map);
-		loaded = false;	// Force rebuild
+		loaded = P_LoadGLNodes(map);
+		if(gienek_enabled)
+		{
+			loaded = false;	// Force rebuild
+		}
 		if (!loaded)
 		{
 			// none found - we have to build new ones!
