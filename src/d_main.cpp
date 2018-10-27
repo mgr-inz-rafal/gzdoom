@@ -113,6 +113,7 @@ EXTERN_CVAR(Int, vr_mode)
 void DrawHUD();
 void D_DoAnonStats();
 bool gienek_enabled = false;
+bool gienek_full_map_loaded = false;
 
 // MACROS ------------------------------------------------------------------
 

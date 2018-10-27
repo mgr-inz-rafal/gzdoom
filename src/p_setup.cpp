@@ -61,6 +61,7 @@
 using boost::asio::ip::tcp;
 
 extern bool gienek_enabled;
+extern bool gienek_full_map_loaded;
 extern tcp::socket* gienek_global_socket;
 
 #include <math.h>
@@ -228,6 +229,7 @@ void send_map_to_gienek()
 {
 	if(gienek_enabled)
 	{
+		gienek_full_map_loaded = false;
 		char buf[1];
 		buf[0] = 'x';
 		boost::system::error_code ignored_error;
@@ -283,6 +285,9 @@ void send_map_to_gienek()
 				int16_t posy = static_cast<int16_t>(t->Y());
 				int16_t posz = static_cast<int16_t>(t->Z());
 
+				// TODO: This is copy&pasted to p_mobj.cpp
+				// Introduce kind of a gienek-client app with
+				// appropriate interface, eg. send_thing()
 				char buf[13];
 				buf[0] = 'c';
 				memcpy(&buf[1], &index, 2);
@@ -302,6 +307,7 @@ void send_map_to_gienek()
 		// Notify Gienek that entire map has been sent
 		buf[0] = 'f';
 		boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		gienek_full_map_loaded = true;
 	}
 }
 

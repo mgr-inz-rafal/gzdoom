@@ -40,6 +40,7 @@
 #include "info.h"
 
 #include "doomdef.h"
+
 #include "textures/textures.h"
 #include "r_data/renderstyle.h"
 #include "s_sound.h"
@@ -116,7 +117,6 @@ class FLightDefaults;
 //
 // Any questions?
 //
-
 
 
 // --- mobj.flags ---
@@ -1423,19 +1423,9 @@ public:
 		if (!moving) Prev.Z = Z();
 	}
 
-	void SetXY(const DVector2 &npos)
-	{
-		__Pos.X = npos.X;
-		__Pos.Y = npos.Y;
-	}
-	void SetXYZ(double xx, double yy, double zz)
-	{
-		__Pos = { xx,yy,zz };
-	}
-	void SetXYZ(const DVector3 &npos)
-	{
-		__Pos = npos;
-	}
+	void SetXY(const DVector2 &npos);
+	void SetXYZ(double xx, double yy, double zz);
+	void SetXYZ(const DVector3 &npos);
 
 	double VelXYToSpeed() const
 	{

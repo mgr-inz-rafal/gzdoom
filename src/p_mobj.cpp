@@ -99,6 +99,10 @@
 #include "actorinlines.h"
 #include "a_dynlight.h"
 
+#include <boost/asio.hpp>
+extern boost::asio::ip::tcp::socket gienek_socket;
+extern bool gienek_full_map_loaded;
+
 // MACROS ------------------------------------------------------------------
 
 #define WATER_SINK_FACTOR		0.125
@@ -1744,6 +1748,48 @@ DEFINE_ACTION_FUNCTION(AActor, Touch)
 	PARAM_OBJECT_NOT_NULL(toucher, AActor);
 	self->Touch(toucher);
 	return 0;
+}
+
+void update_thing_pos_in_gienek(AActor* a)
+{
+	if(gienek_full_map_loaded)
+	{
+		uint16_t index = a->gienek_index;
+		int16_t health = a->health;
+		int16_t direction = static_cast<int16_t>(a->Angles.Yaw.Degrees);
+		int16_t posx = static_cast<int16_t>(a->X());
+		int16_t posy = static_cast<int16_t>(a->Y());
+		int16_t posz = static_cast<int16_t>(a->Z());
+
+		char buf[13];
+		buf[0] = 'd';
+		memcpy(&buf[1], &index, 2);
+		memcpy(&buf[3], &health, 2);
+		memcpy(&buf[5], &direction, 2);
+		memcpy(&buf[7], &posx, 2);
+		memcpy(&buf[9], &posy, 2);
+		memcpy(&buf[11], &posz, 2);
+
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
+}
+
+void AActor::SetXY(const DVector2 &npos)
+{
+	__Pos.X = npos.X;
+	__Pos.Y = npos.Y;
+	update_thing_pos_in_gienek(this);
+}
+void AActor::SetXYZ(double xx, double yy, double zz)
+{
+	__Pos = { xx,yy,zz };
+	update_thing_pos_in_gienek(this);
+}
+void AActor::SetXYZ(const DVector3 &npos)
+{
+	__Pos = npos;
+	update_thing_pos_in_gienek(this);
 }
 
 void AActor::CallTouch(AActor *toucher)
