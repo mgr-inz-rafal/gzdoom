@@ -226,7 +226,6 @@ static int GetMapIndex(const char *mapname, int lastindex, const char *lumpname,
 
 void send_map_to_gienek()
 {
-	// We have new GL-friendly nodes rebuilt. Let's send them to Gienek
 	if(gienek_enabled)
 	{
 		char buf[1];
@@ -277,6 +276,25 @@ void send_map_to_gienek()
 			t = sec.thinglist;
 			while (t)
 			{
+				uint16_t index = t->gienek_index;
+				int16_t health = t->health;
+				int16_t direction = static_cast<int16_t>(t->Angles.Yaw.Degrees);
+				int16_t posx = static_cast<int16_t>(t->X());
+				int16_t posy = static_cast<int16_t>(t->Y());
+				int16_t posz = static_cast<int16_t>(t->Z());
+
+				char buf[13];
+				buf[0] = 'c';
+				memcpy(&buf[1], &index, 2);
+				memcpy(&buf[3], &health, 2);
+				memcpy(&buf[5], &direction, 2);
+				memcpy(&buf[7], &posx, 2);
+				memcpy(&buf[9], &posy, 2);
+				memcpy(&buf[11], &posz, 2);
+
+				boost::system::error_code ignored_error;
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
 				t = t->snext;
 			}
 		}
