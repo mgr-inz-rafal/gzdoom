@@ -1750,6 +1750,19 @@ DEFINE_ACTION_FUNCTION(AActor, Touch)
 	return 0;
 }
 
+void remove_thing_from_gienek(uint16_t index)
+{
+	if(gienek_full_map_loaded)
+	{
+		char buf[3];
+		buf[0] = 'e';
+		memcpy(&buf[1], &index, 2);
+
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
+}
+
 void update_thing_pos_in_gienek(AActor* a)
 {
 	if(gienek_full_map_loaded)
@@ -3525,6 +3538,7 @@ void AActor::AddToHash ()
 //
 void AActor::RemoveFromHash ()
 {
+	remove_thing_from_gienek(this->gienek_index);
 	if (tid != 0 && iprev)
 	{
 		*iprev = inext;
