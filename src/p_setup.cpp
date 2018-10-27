@@ -64,6 +64,8 @@ extern bool gienek_enabled;
 extern bool gienek_full_map_loaded;
 extern tcp::socket* gienek_global_socket;
 
+int gienek_indexer = 0;
+
 #include <math.h>
 #ifdef _MSC_VER
 #include <malloc.h>		// for alloca()
@@ -1710,7 +1712,6 @@ CVAR(Bool, dumpspawnedthings, false, 0)
 
 AActor *SpawnMapThing(int index, FMapThing *mt, int position)
 {
-	static int gienek_indexer = 0;
 	AActor *spawned = P_SpawnMapThing(mt, position);
 	if(spawned)
 	{

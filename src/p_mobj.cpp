@@ -102,6 +102,7 @@
 #include <boost/asio.hpp>
 extern boost::asio::ip::tcp::socket gienek_socket;
 extern bool gienek_full_map_loaded;
+extern int gienek_indexer;
 
 // MACROS ------------------------------------------------------------------
 
@@ -1748,6 +1749,31 @@ DEFINE_ACTION_FUNCTION(AActor, Touch)
 	PARAM_OBJECT_NOT_NULL(toucher, AActor);
 	self->Touch(toucher);
 	return 0;
+}
+
+void add_thing_to_gienek(AActor* a)
+{
+	if(gienek_full_map_loaded)
+	{
+		uint16_t index = a->gienek_index;
+		int16_t health = a->health;
+		int16_t direction = static_cast<int16_t>(a->Angles.Yaw.Degrees);
+		int16_t posx = static_cast<int16_t>(a->X());
+		int16_t posy = static_cast<int16_t>(a->Y());
+		int16_t posz = static_cast<int16_t>(a->Z());
+
+		char buf[13];
+		buf[0] = 'c';
+		memcpy(&buf[1], &index, 2);
+		memcpy(&buf[3], &health, 2);
+		memcpy(&buf[5], &direction, 2);
+		memcpy(&buf[7], &posx, 2);
+		memcpy(&buf[9], &posy, 2);
+		memcpy(&buf[11], &posz, 2);
+
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
 }
 
 void remove_thing_from_gienek(uint16_t index)
@@ -5162,6 +5188,10 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	}
 	// force scroller check in the first tic.
 	actor->flags8 |= MF8_INSCROLLSEC;
+
+	actor->gienek_index = gienek_indexer++;
+	add_thing_to_gienek(actor);
+
 	return actor;
 }
 
