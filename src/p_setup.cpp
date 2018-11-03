@@ -64,7 +64,7 @@ extern bool gienek_enabled;
 extern bool gienek_full_map_loaded;
 extern tcp::socket* gienek_global_socket;
 
-int gienek_indexer = 0;
+int gienek_indexer = 1;
 
 #include <math.h>
 #ifdef _MSC_VER
@@ -227,6 +227,17 @@ static int GetMapIndex(const char *mapname, int lastindex, const char *lumpname,
 	return -1;	// End of map reached
 }
 
+std::map<std::string, int16_t> typename_to_id_map = {
+	{"CellPack",		142},
+	{"Cell",			75},
+	{"Berserk",			134},
+	{"Chaingun",		28},
+	{"PlasmaRifle",		30},
+	{"PlasmaBall",		51},
+	{"Zombieman",		4},
+	{"BulletPuff",		131}
+};
+
 void send_map_to_gienek()
 {
 	if(gienek_enabled)
@@ -274,7 +285,7 @@ void send_map_to_gienek()
 		}
 
 		// Report things
-		AActor*	 t;
+		AActor*	t;
 		for (auto &sec : level.sectors)
 		{
 			t = sec.thinglist;
@@ -286,21 +297,34 @@ void send_map_to_gienek()
 				int16_t posx = static_cast<int16_t>(t->X());
 				int16_t posy = static_cast<int16_t>(t->Y());
 				int16_t posz = static_cast<int16_t>(t->Z());
+				int16_t type;
+				auto classname = t->GetClass()->TypeName.GetChars();
+				if(typename_to_id_map.find(classname) != typename_to_id_map.end())
+				{
+					type = typename_to_id_map[classname];
+				}
+				else
+				{
+					type = 0;
+				}
+				if(type != 0)
+				{
+					// TODO: This is copy&pasted to p_mobj.cpp
+					// Introduce kind of a gienek-client app with
+					// appropriate interface, eg. send_thing()
+					char buf[15];
+					buf[0] = 'c';
+					memcpy(&buf[1], &index, 2);
+					memcpy(&buf[3], &health, 2);
+					memcpy(&buf[5], &direction, 2);
+					memcpy(&buf[7], &posx, 2);
+					memcpy(&buf[9], &posy, 2);
+					memcpy(&buf[11], &posz, 2);
+					memcpy(&buf[13], &type, 2);
 
-				// TODO: This is copy&pasted to p_mobj.cpp
-				// Introduce kind of a gienek-client app with
-				// appropriate interface, eg. send_thing()
-				char buf[13];
-				buf[0] = 'c';
-				memcpy(&buf[1], &index, 2);
-				memcpy(&buf[3], &health, 2);
-				memcpy(&buf[5], &direction, 2);
-				memcpy(&buf[7], &posx, 2);
-				memcpy(&buf[9], &posy, 2);
-				memcpy(&buf[11], &posz, 2);
-
-				boost::system::error_code ignored_error;
-				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+					boost::system::error_code ignored_error;
+					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+				}
 
 				t = t->snext;
 			}

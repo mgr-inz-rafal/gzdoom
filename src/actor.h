@@ -1512,7 +1512,7 @@ public:
 	size_t PropagateMark();
 
 public:
-	uint16_t gienek_index;
+	uint16_t gienek_index { 0 };
 };
 
 class FActorIterator

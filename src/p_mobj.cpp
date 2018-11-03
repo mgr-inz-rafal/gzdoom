@@ -1751,6 +1751,8 @@ DEFINE_ACTION_FUNCTION(AActor, Touch)
 	return 0;
 }
 
+extern std::map<std::string, int16_t> typename_to_id_map;
+
 void add_thing_to_gienek(AActor* a)
 {
 	if(gienek_full_map_loaded)
@@ -1761,18 +1763,32 @@ void add_thing_to_gienek(AActor* a)
 		int16_t posx = static_cast<int16_t>(a->X());
 		int16_t posy = static_cast<int16_t>(a->Y());
 		int16_t posz = static_cast<int16_t>(a->Z());
+		int16_t type;
+		auto classname = a->GetClass()->TypeName.GetChars();
+		if(typename_to_id_map.find(classname) != typename_to_id_map.end())
+		{
+			type = typename_to_id_map[classname];
+		}
+		else
+		{
+			type = 0;
+		}
 
-		char buf[13];
-		buf[0] = 'c';
-		memcpy(&buf[1], &index, 2);
-		memcpy(&buf[3], &health, 2);
-		memcpy(&buf[5], &direction, 2);
-		memcpy(&buf[7], &posx, 2);
-		memcpy(&buf[9], &posy, 2);
-		memcpy(&buf[11], &posz, 2);
+		if(type != 0)
+		{
+			char buf[15];
+			buf[0] = 'c';
+			memcpy(&buf[1], &index, 2);
+			memcpy(&buf[3], &health, 2);
+			memcpy(&buf[5], &direction, 2);
+			memcpy(&buf[7], &posx, 2);
+			memcpy(&buf[9], &posy, 2);
+			memcpy(&buf[11], &posz, 2);
+			memcpy(&buf[13], &type, 2);
 
-		boost::system::error_code ignored_error;
-		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			boost::system::error_code ignored_error;
+			boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		}
 	}
 }
 
@@ -1794,13 +1810,28 @@ void update_thing_pos_in_gienek(AActor* a)
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;
+		if(index == 0)
+		{
+			// Do not sent items out of Gienek's interest, like temporary BulletPuffs
+			return;
+		}
 		int16_t health = a->health;
 		int16_t direction = static_cast<int16_t>(a->Angles.Yaw.Degrees);
 		int16_t posx = static_cast<int16_t>(a->X());
 		int16_t posy = static_cast<int16_t>(a->Y());
 		int16_t posz = static_cast<int16_t>(a->Z());
+		int16_t type;
+		auto classname = a->GetClass()->TypeName.GetChars();
+		if(typename_to_id_map.find(classname) != typename_to_id_map.end())
+		{
+			type = typename_to_id_map[classname];
+		}
+		else
+		{
+			type = 0;
+		}
 
-		char buf[13];
+		char buf[15];
 		buf[0] = 'd';
 		memcpy(&buf[1], &index, 2);
 		memcpy(&buf[3], &health, 2);
@@ -1808,6 +1839,7 @@ void update_thing_pos_in_gienek(AActor* a)
 		memcpy(&buf[7], &posx, 2);
 		memcpy(&buf[9], &posy, 2);
 		memcpy(&buf[11], &posz, 2);
+		memcpy(&buf[13], &type, 2);
 
 		boost::system::error_code ignored_error;
 		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
