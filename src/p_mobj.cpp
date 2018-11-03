@@ -5055,6 +5055,7 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	// Set the state, but do not use SetState, because action
 	// routines can't be called yet.  If the spawnstate has an action
 	// routine, it will not be called.
+
 	FState *st = actor->SpawnState;
 	actor->state = st;
 	actor->tics = st->GetTics();
@@ -5189,8 +5190,11 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	// force scroller check in the first tic.
 	actor->flags8 |= MF8_INSCROLLSEC;
 
-	actor->gienek_index = gienek_indexer++;
-	add_thing_to_gienek(actor);
+	if(!actor->IsKindOf(RUNTIME_CLASS(AInventory)))
+	{
+		actor->gienek_index = gienek_indexer++;
+		add_thing_to_gienek(actor);
+	}
 
 	return actor;
 }
