@@ -28,11 +28,7 @@
 
 // HEADER FILES ------------------------------------------------------------
 
-#include <boost/asio.hpp>
-#include <boost/algorithm/string.hpp>
-#include <string>
-#include <vector>
-using boost::asio::ip::tcp;
+#include "gienek/gienek.h"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -46,74 +42,75 @@ using boost::asio::ip::tcp;
 #include <unistd.h>
 #endif
 
-#include <math.h>
 #include <assert.h>
+#include <math.h>
 
 #include "doomerrors.h"
 
-#include "i_time.h"
-#include "d_gui.h"
-#include "m_random.h"
-#include "doomdef.h"
-#include "doomstat.h"
-#include "gstrings.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "v_video.h"
-#include "intermission/intermission.h"
-#include "f_wipe.h"
-#include "m_argv.h"
-#include "m_misc.h"
-#include "menu/menu.h"
+#include "a_dynlight.h"
+#include "am_map.h"
+#include "autosegs.h"
 #include "c_console.h"
 #include "c_dispatch.h"
-#include "i_sound.h"
-#include "i_video.h"
-#include "g_game.h"
-#include "hu_stuff.h"
-#include "wi_stuff.h"
-#include "st_stuff.h"
-#include "am_map.h"
-#include "p_setup.h"
-#include "r_utility.h"
-#include "r_sky.h"
-#include "d_main.h"
-#include "d_dehacked.h"
 #include "cmdlib.h"
-#include "v_text.h"
-#include "gi.h"
-#include "a_dynlight.h"
-#include "gameconfigfile.h"
-#include "sbar.h"
-#include "decallib.h"
-#include "version.h"
-#include "st_start.h"
-#include "teaminfo.h"
-#include "hardware.h"
-#include "sbarinfo.h"
-#include "d_net.h"
-#include "d_event.h"
-#include "d_netinf.h"
-#include "m_cheat.h"
 #include "compatibility.h"
-#include "m_joy.h"
-#include "po_man.h"
-#include "r_renderer.h"
-#include "p_local.h"
-#include "autosegs.h"
-#include "fragglescript/t_fs.h"
-#include "g_levellocals.h"
+#include "d_dehacked.h"
+#include "d_event.h"
+#include "d_gui.h"
+#include "d_main.h"
+#include "d_net.h"
+#include "d_netinf.h"
+#include "decallib.h"
+#include "doomdef.h"
+#include "doomstat.h"
 #include "events.h"
-#include "vm.h"
-#include "types.h"
+#include "f_wipe.h"
+#include "fragglescript/t_fs.h"
+#include "g_game.h"
+#include "g_levellocals.h"
+#include "gameconfigfile.h"
+#include "gi.h"
+#include "gstrings.h"
+#include "hardware.h"
+#include "hu_stuff.h"
+#include "i_sound.h"
+#include "i_time.h"
+#include "i_video.h"
+#include "intermission/intermission.h"
+#include "m_argv.h"
+#include "m_cheat.h"
+#include "m_joy.h"
+#include "m_misc.h"
+#include "m_random.h"
+#include "menu/menu.h"
+#include "p_local.h"
+#include "p_setup.h"
+#include "po_man.h"
 #include "r_data/r_vanillatrans.h"
+#include "r_renderer.h"
+#include "r_sky.h"
+#include "r_utility.h"
+#include "s_sound.h"
+#include "sbar.h"
+#include "sbarinfo.h"
+#include "st_start.h"
+#include "st_stuff.h"
+#include "teaminfo.h"
+#include "types.h"
+#include "v_text.h"
+#include "v_video.h"
+#include "version.h"
+#include "vm.h"
+#include "w_wad.h"
+#include "wi_stuff.h"
 
 EXTERN_CVAR(Bool, hud_althud)
 EXTERN_CVAR(Int, vr_mode)
 void DrawHUD();
 void D_DoAnonStats();
+
+gienek_api gienek;
 bool gienek_enabled = false;
-bool gienek_full_map_loaded = false;
 
 // MACROS ------------------------------------------------------------------
 
@@ -165,25 +162,7 @@ extern bool M_DemoNoPlay;	// [RH] if true, then skip any demos in the loop
 extern bool insave;
 extern TDeletingArray<FLightDefaults *> LightDefaults;
 
-boost::asio::io_context io_context;
-tcp::socket gienek_socket(io_context);
 
-tcp::socket* gienek_global_socket;
-
-void Gienek_Init(const char* address)
-{
-	std::vector<std::string> parts;
-	boost::split(parts, address, [](char c){return c == ':';});
-	if(2 != parts.size())
-	{
-		throw std::invalid_argument("Correct format for specifying Gienek server is SERVERNAME:PORT");
-	}
-	tcp::resolver resolver(io_context);
-    tcp::resolver::results_type endpoints = resolver.resolve(parts.front(), parts.back());
-
-    boost::asio::connect(gienek_socket, endpoints);
-	gienek_global_socket = &gienek_socket;
-}
 
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
 
@@ -2546,7 +2525,7 @@ void D_DoomMain (void)
 				}
 				auto gienek_address = Args->GetArg(p+1);
 				Printf("Gienek_Init: Connecting to Gienek AssAssYn an %s\n", gienek_address);
-				Gienek_Init(gienek_address);
+				gienek.Gienek_Init(gienek_address);
 				gienek_enabled = true;
 			}
 		}

@@ -708,6 +708,7 @@ file( GLOB HEADER_FILES
 	gl/system/*.h
 	gl/textures/*.h
 	gl_load/*.h
+	gienek/*.h
 	*.h
 )
 
@@ -1079,6 +1080,7 @@ set (PCH_SOURCES
 	hwrenderer/utility/hw_lighting.cpp
 	hwrenderer/utility/hw_shaderpatcher.cpp
 	hwrenderer/utility/hw_vrmodes.cpp
+	gienek/gienek.cpp
 
 	menu/joystickmenu.cpp
 	menu/loadsavemenu.cpp
@@ -1389,6 +1391,7 @@ install(TARGETS zdoom
 		DESTINATION ${INSTALL_PATH}
 		COMPONENT "Game executable")
 
+source_group("Gienek" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/gienek/.+")
 source_group("Audio Files" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/sound/.+")
 source_group("Audio Files\\ADL MIDI" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/sound/adlmidi/.+")
 source_group("Audio Files\\OPN MIDI" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/sound/opnmidi/.+")

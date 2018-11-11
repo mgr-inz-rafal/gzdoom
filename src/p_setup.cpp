@@ -57,61 +57,54 @@
 **
 */
 
-#include <boost/asio.hpp>
-using boost::asio::ip::tcp;
-
-extern bool gienek_enabled;
-extern bool gienek_full_map_loaded;
-extern tcp::socket* gienek_global_socket;
-
-int gienek_indexer = 1;
+#include "gienek/gienek.h"
 
 #include <math.h>
 #ifdef _MSC_VER
 #include <malloc.h>		// for alloca()
 #endif
 
-#include "templates.h"
-#include "d_player.h"
-#include "m_argv.h"
-#include "g_game.h"
-#include "w_wad.h"
-#include "p_local.h"
-#include "p_effect.h"
-#include "p_terrain.h"
-#include "nodebuild.h"
-#include "p_lnspec.h"
-#include "c_console.h"
-#include "p_acs.h"
-#include "announcer.h"
-#include "wi_stuff.h"
-#include "doomerrors.h"
-#include "gi.h"
-#include "p_conversation.h"
+#include "a_dynlight.h"
 #include "a_keys.h"
+#include "announcer.h"
+#include "c_console.h"
+#include "c_dispatch.h"
+#include "cmdlib.h"
+#include "compatibility.h"
+#include "d_player.h"
+#include "doomerrors.h"
+#include "g_game.h"
+#include "g_levellocals.h"
+#include "gi.h"
+#include "m_argv.h"
+#include "md5.h"
+#include "nodebuild.h"
+#include "p_acs.h"
+#include "p_blockmap.h"
+#include "p_conversation.h"
+#include "p_effect.h"
+#include "p_lnspec.h"
+#include "p_local.h"
+#include "p_setup.h"
+#include "p_spec.h"
+#include "p_terrain.h"
+#include "po_man.h"
+#include "r_data/r_interpolate.h"
+#include "r_renderer.h"
+#include "r_sky.h"
+#include "r_utility.h"
 #include "s_sndseq.h"
 #include "sbar.h"
-#include "p_setup.h"
-#include "r_data/r_interpolate.h"
-#include "r_sky.h"
-#include "cmdlib.h"
-#include "md5.h"
-#include "compatibility.h"
-#include "po_man.h"
-#include "r_renderer.h"
-#include "p_blockmap.h"
-#include "r_utility.h"
-#include "p_spec.h"
-#include "g_levellocals.h"
-#include "c_dispatch.h"
-#include "a_dynlight.h"
+#include "templates.h"
+#include "w_wad.h"
+#include "wi_stuff.h"
 #ifndef NO_EDATA
 #include "edata.h"
 #endif
 #include "events.h"
-#include "types.h"
 #include "i_time.h"
 #include "scripting/vm/vm.h"
+#include "types.h"
 
 #include "fragglescript/t_fs.h"
 
@@ -132,6 +125,9 @@ void P_ParseTextMap(MapData *map, FMissingTextureTracker &);
 
 extern int numinterpolations;
 extern unsigned int R_OldBlend;
+
+extern bool gienek_enabled;
+extern gienek_api gienek;
 
 EXTERN_CVAR(Bool, am_textured)
 
@@ -227,27 +223,15 @@ static int GetMapIndex(const char *mapname, int lastindex, const char *lumpname,
 	return -1;	// End of map reached
 }
 
-std::map<std::string, int16_t> typename_to_id_map = {
-	{"CellPack",		142},
-	{"Cell",			75},
-	{"Berserk",			134},
-	{"Chaingun",		28},
-	{"PlasmaRifle",		30},
-	{"PlasmaBall",		51},
-	{"Zombieman",		4},
-	{"BulletPuff",		131},
-	{"Clip",			11}
-};
-
 void send_map_to_gienek()
 {
 	if(gienek_enabled)
 	{
-		gienek_full_map_loaded = false;
+		gienek.gienek_full_map_loaded = false;
 		char buf[1];
 		buf[0] = 'x';
 		boost::system::error_code ignored_error;
-		boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		boost::asio::write(gienek.gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
 		for (const auto &v : level.vertexes)
 		{
@@ -261,7 +245,7 @@ void send_map_to_gienek()
 			memcpy(&buf[1], &x, 2);
 			memcpy(&buf[3], &y, 2);
 			boost::system::error_code ignored_error;
-			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			boost::asio::write(gienek.gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 		}
 
 		for (const auto &ssector: level.subsectors)
@@ -270,7 +254,7 @@ void send_map_to_gienek()
 			buf[0] = 'b';
 			memcpy(&buf[1], &ssector.numlines, 2);
 			boost::system::error_code ignored_error;
-			boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			boost::asio::write(gienek.gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
 			int x = ssector.firstline->Index();
 			for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
@@ -281,7 +265,7 @@ void send_map_to_gienek()
 				memcpy(&buf[0], &sti, 2);
 				memcpy(&buf[2], &eni, 2);
 				boost::system::error_code ignored_error;
-				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+				boost::asio::write(gienek.gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 			}
 		}
 
@@ -300,9 +284,9 @@ void send_map_to_gienek()
 				int16_t posz = static_cast<int16_t>(t->Z());
 				int16_t type;
 				auto classname = t->GetClass()->TypeName.GetChars();
-				if(typename_to_id_map.find(classname) != typename_to_id_map.end())
+				if(gienek.typename_to_id_map.find(classname) != gienek.typename_to_id_map.end())
 				{
-					type = typename_to_id_map[classname];
+					type = gienek.typename_to_id_map[classname];
 				}
 				else
 				{
@@ -339,8 +323,8 @@ void send_map_to_gienek()
 
 		// Notify Gienek that entire map has been sent
 		buf[0] = 'f';
-		boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-		gienek_full_map_loaded = true;
+		boost::asio::write(gienek.gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		gienek.gienek_full_map_loaded = true;
 	}
 }
 
@@ -1746,7 +1730,7 @@ AActor *SpawnMapThing(int index, FMapThing *mt, int position)
 	AActor *spawned = P_SpawnMapThing(mt, position);
 	if(spawned)
 	{
-		spawned->gienek_index = gienek_indexer++;
+		spawned->gienek_index = gienek.gienek_indexer++;
 	}
 	if (dumpspawnedthings)
 	{
