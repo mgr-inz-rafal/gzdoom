@@ -3499,7 +3499,6 @@ void AActor::AddToHash ()
 //
 void AActor::RemoveFromHash ()
 {
-	gienek.remove_thing_from_gienek(this->gienek_index);
 	if (tid != 0 && iprev)
 	{
 		*iprev = inext;
@@ -5007,8 +5006,11 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	}
 
 	// set subsector and/or block links
+	auto dupa = actor->GetClass()->TypeName.GetChars();
+
 	actor->LinkToWorld (nullptr, SpawningMapThing);
 	actor->ClearInterpolation();
+	gienek.add_thing_to_gienek(actor);
 
 	actor->dropoffz = actor->floorz = actor->Sector->floorplane.ZatPoint(pos);
 	actor->ceilingz = actor->Sector->ceilingplane.ZatPoint(pos);
@@ -5124,12 +5126,6 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	}
 	// force scroller check in the first tic.
 	actor->flags8 |= MF8_INSCROLLSEC;
-
-	if(!actor->IsKindOf(RUNTIME_CLASS(AInventory)))
-	{
-		actor->gienek_index = gienek.get_next_index();
-		gienek.add_thing_to_gienek(actor);
-	}
 
 	return actor;
 }
@@ -5416,6 +5412,7 @@ void AActor::OnDestroy ()
 	RemoveFromHash ();
 
 	// unlink from sector and block lists
+	gienek.remove_thing_from_gienek(this->gienek_index);
 	UnlinkFromWorld (nullptr);
 	flags |= MF_NOSECTOR|MF_NOBLOCKMAP;
 

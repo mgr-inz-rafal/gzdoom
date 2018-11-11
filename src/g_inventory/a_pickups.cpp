@@ -51,6 +51,9 @@
 #include "vm.h"
 #include "c_functions.h"
 #include "g_levellocals.h"
+#include "gienek/gienek.h"
+
+extern gienek_api gienek;
 
 EXTERN_CVAR(Bool, sv_unlimited_pickup)
 
@@ -210,9 +213,11 @@ bool AInventory::Grind(bool items)
 
 void AInventory::BecomeItem ()
 {
+	auto suka = this->GetClass()->TypeName.GetChars();
 	if (!(flags & (MF_NOBLOCKMAP|MF_NOSECTOR)))
 	{
 		UnlinkFromWorld (nullptr);
+		gienek.remove_thing_from_gienek(this->gienek_index);
 		flags |= MF_NOBLOCKMAP|MF_NOSECTOR;
 		LinkToWorld (nullptr);
 	}
