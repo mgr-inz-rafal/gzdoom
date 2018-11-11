@@ -1625,7 +1625,7 @@ AActor *SpawnMapThing(int index, FMapThing *mt, int position)
 	AActor *spawned = P_SpawnMapThing(mt, position);
 	if(spawned)
 	{
-		spawned->gienek_index = gienek.gienek_indexer++;
+//		spawned->gienek_index = gienek.get_next_index();
 	}
 	if (dumpspawnedthings)
 	{

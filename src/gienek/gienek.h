@@ -25,7 +25,6 @@ public:
 	boost::asio::io_context io_context;
 	boost::asio::ip::tcp::socket gienek_socket {io_context};
 	bool gienek_full_map_loaded;
-	int32_t gienek_indexer;
 public:
 	gienek_api();
 
@@ -38,8 +37,10 @@ public:
 	void send_map_to_gienek(FLevelLocals* level);
 	void start_sending_map();
 	void reset();
+	int32_t get_next_index();
 
 private:
+	int32_t gienek_indexer;
 	bool map_delivery_in_progress;
 	void stop_sending_map();
 };

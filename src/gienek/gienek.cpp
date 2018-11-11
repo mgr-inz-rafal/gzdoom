@@ -20,6 +20,7 @@ void gienek_api::reset()
 {
 	gienek_full_map_loaded = false;
 	map_delivery_in_progress = false;
+	gienek_indexer = 0;
 }
 
 void gienek_api::Gienek_Init(const char* address)
@@ -92,8 +93,6 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
-	return;
-
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;
@@ -253,4 +252,9 @@ void gienek_api::stop_sending_map()
 	gienek_full_map_loaded = true;
 
 	map_delivery_in_progress = false;
+}
+
+int32_t gienek_api::get_next_index()
+{
+	return gienek_indexer++;
 }

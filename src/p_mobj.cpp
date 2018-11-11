@@ -5127,7 +5127,7 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 
 	if(!actor->IsKindOf(RUNTIME_CLASS(AInventory)))
 	{
-		actor->gienek_index = gienek.gienek_indexer++;
+		actor->gienek_index = gienek.get_next_index();
 		gienek.add_thing_to_gienek(actor);
 	}
 
