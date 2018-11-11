@@ -3651,6 +3651,7 @@ void P_FreeExtraLevelData()
 
 void P_SetupLevel (const char *lumpname, int position)
 {
+	gienek.start_sending_map();
 	cycle_t times[20];
 #if 0
 	FMapThing *buildthings;

@@ -13,7 +13,13 @@ extern std::map<std::string, int16_t> typename_to_id_map;
 
 gienek_api::gienek_api()
 {
+	reset();
+}
+
+void gienek_api::reset()
+{
 	gienek_full_map_loaded = false;
+	map_delivery_in_progress = false;
 }
 
 void gienek_api::Gienek_Init(const char* address)
@@ -32,7 +38,6 @@ void gienek_api::Gienek_Init(const char* address)
 
 void gienek_api::add_thing_to_gienek(AActor* a)
 {
-	auto item_type = a->GetClass()->TypeName.GetChars();
 //	if(gienek_full_map_loaded)
 	if(true)
 	{
@@ -88,6 +93,7 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
 	return;
+
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;
@@ -129,11 +135,12 @@ void gienek_api::update_thing_pos_in_gienek(AActor* a)
 
 void gienek_api::send_map_to_gienek(FLevelLocals* level)
 {
+	if(!map_delivery_in_progress)
+	{
+		start_sending_map();
+	}
+
 	gienek_full_map_loaded = false;
-	char buf[1];
-	buf[0] = 'x';
-	boost::system::error_code ignored_error;
-	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
 	for (const auto &v : level->vertexes)
 	{
@@ -224,7 +231,26 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 	}
 
 	// Notify Gienek that entire map has been sent
+	stop_sending_map();
+}
+
+void gienek_api::start_sending_map()
+{
+	char buf[1];
+	buf[0] = 'x';
+	boost::system::error_code ignored_error;
+	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+	map_delivery_in_progress = true;
+}
+
+void gienek_api::stop_sending_map()
+{
+	char buf[1];
 	buf[0] = 'f';
+	boost::system::error_code ignored_error;
 	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	gienek_full_map_loaded = true;
+
+	map_delivery_in_progress = false;
 }

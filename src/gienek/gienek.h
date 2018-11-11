@@ -33,5 +33,13 @@ public:
 	void add_thing_to_gienek(AActor* a);
 	void remove_thing_from_gienek(uint16_t index);
 	void update_thing_pos_in_gienek(AActor* a);
+	// TODO: This should be renamed to something like "send_map_geometry", since it
+	// will (probably) not care about things
 	void send_map_to_gienek(FLevelLocals* level);
+	void start_sending_map();
+	void reset();
+
+private:
+	bool map_delivery_in_progress;
+	void stop_sending_map();
 };
