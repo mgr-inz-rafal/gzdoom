@@ -11,6 +11,7 @@ class gienek_api
 {
 public:
 	std::map<std::string, int16_t> typename_to_id_map = {
+		{"DoomPlayer",		29999},
 		{"CellPack",		142},
 		{"Cell",			75},
 		{"Berserk",			134},
