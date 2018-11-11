@@ -235,7 +235,8 @@ std::map<std::string, int16_t> typename_to_id_map = {
 	{"PlasmaRifle",		30},
 	{"PlasmaBall",		51},
 	{"Zombieman",		4},
-	{"BulletPuff",		131}
+	{"BulletPuff",		131},
+	{"Clip",			11}
 };
 
 void send_map_to_gienek()
@@ -312,6 +313,11 @@ void send_map_to_gienek()
 					// TODO: This is copy&pasted to p_mobj.cpp
 					// Introduce kind of a gienek-client app with
 					// appropriate interface, eg. send_thing()
+
+
+					/*
+					CHUJNIA
+
 					char buf[15];
 					buf[0] = 'c';
 					memcpy(&buf[1], &index, 2);
@@ -324,6 +330,7 @@ void send_map_to_gienek()
 
 					boost::system::error_code ignored_error;
 					boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+					*/
 				}
 
 				t = t->snext;
