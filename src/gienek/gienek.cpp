@@ -7,6 +7,7 @@
 using boost::asio::ip::tcp;
 
 #include "actor.h"
+#include "g_levellocals.h"
 
 extern std::map<std::string, int16_t> typename_to_id_map;
 
@@ -31,7 +32,9 @@ void gienek_api::Gienek_Init(const char* address)
 
 void gienek_api::add_thing_to_gienek(AActor* a)
 {
-	if(gienek_full_map_loaded)
+	auto item_type = a->GetClass()->TypeName.GetChars();
+//	if(gienek_full_map_loaded)
+	if(true)
 	{
 		uint16_t index = a->gienek_index;
 		int16_t health = a->health;
@@ -70,6 +73,7 @@ void gienek_api::add_thing_to_gienek(AActor* a)
 
 void gienek_api::remove_thing_from_gienek(uint16_t index)
 {
+	return;
 	if(gienek_full_map_loaded)
 	{
 		char buf[3];
@@ -83,6 +87,7 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
+	return;
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;
@@ -120,4 +125,106 @@ void gienek_api::update_thing_pos_in_gienek(AActor* a)
 		boost::system::error_code ignored_error;
 		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
+}
+
+void gienek_api::send_map_to_gienek(FLevelLocals* level)
+{
+	gienek_full_map_loaded = false;
+	char buf[1];
+	buf[0] = 'x';
+	boost::system::error_code ignored_error;
+	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+	for (const auto &v : level->vertexes)
+	{
+		int16_t x = static_cast<int16_t>(v.p.X);
+		int16_t y = static_cast<int16_t>(v.p.Y);
+
+		// Report vertex to Gienek
+		// TODO: Take care of the network byte order!
+		char buf[5];
+		buf[0] = 'a';
+		memcpy(&buf[1], &x, 2);
+		memcpy(&buf[3], &y, 2);
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
+
+	for (const auto &ssector: level->subsectors)
+	{
+		char buf[3];
+		buf[0] = 'b';
+		memcpy(&buf[1], &ssector.numlines, 2);
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+
+		int x = ssector.firstline->Index();
+		for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
+		{
+			int16_t sti = level->segs[x].v1->Index();
+			int16_t eni = level->segs[x].v2->Index();
+			char buf[4];
+			memcpy(&buf[0], &sti, 2);
+			memcpy(&buf[2], &eni, 2);
+			boost::system::error_code ignored_error;
+			boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		}
+	}
+
+	// Report things
+	AActor*	t;
+	for (auto &sec : level->sectors)
+	{
+		t = sec.thinglist;
+		while (t)
+		{
+			uint16_t index = t->gienek_index;
+			int16_t health = t->health;
+			int16_t direction = static_cast<int16_t>(t->Angles.Yaw.Degrees);
+			int16_t posx = static_cast<int16_t>(t->X());
+			int16_t posy = static_cast<int16_t>(t->Y());
+			int16_t posz = static_cast<int16_t>(t->Z());
+			int16_t type;
+			auto classname = t->GetClass()->TypeName.GetChars();
+			if(typename_to_id_map.find(classname) != typename_to_id_map.end())
+			{
+				type = typename_to_id_map[classname];
+			}
+			else
+			{
+				type = 0;
+			}
+			if(type != 0)
+			{
+				// TODO: This is copy&pasted to p_mobj.cpp
+				// Introduce kind of a gienek-client app with
+				// appropriate interface, eg. send_thing()
+
+
+				/*
+				CHUJNIA
+
+				char buf[15];
+				buf[0] = 'c';
+				memcpy(&buf[1], &index, 2);
+				memcpy(&buf[3], &health, 2);
+				memcpy(&buf[5], &direction, 2);
+				memcpy(&buf[7], &posx, 2);
+				memcpy(&buf[9], &posy, 2);
+				memcpy(&buf[11], &posz, 2);
+				memcpy(&buf[13], &type, 2);
+
+				boost::system::error_code ignored_error;
+				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+				*/
+			}
+
+			t = t->snext;
+		}
+	}
+
+	// Notify Gienek that entire map has been sent
+	buf[0] = 'f';
+	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	gienek_full_map_loaded = true;
 }

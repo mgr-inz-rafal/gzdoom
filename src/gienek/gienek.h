@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 
 class AActor;
+struct FLevelLocals;
 
 // TODO: Remove all "_to_gienek" suffixex and "gienek_" prefixes, since all is now
 // located in the common API
@@ -32,4 +33,5 @@ public:
 	void add_thing_to_gienek(AActor* a);
 	void remove_thing_from_gienek(uint16_t index);
 	void update_thing_pos_in_gienek(AActor* a);
+	void send_map_to_gienek(FLevelLocals* level);
 };
