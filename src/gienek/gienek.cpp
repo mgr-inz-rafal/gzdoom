@@ -89,14 +89,11 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
+	auto beret = a->GetClass()->TypeName.GetChars();
+
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;
-		if(index == 0)
-		{
-			// Do not sent items out of Gienek's interest, like temporary BulletPuffs
-			return;
-		}
 		int16_t health = a->health;
 		int16_t direction = static_cast<int16_t>(a->Angles.Yaw.Degrees);
 		int16_t posx = static_cast<int16_t>(a->X());
