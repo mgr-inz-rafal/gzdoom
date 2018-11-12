@@ -213,7 +213,6 @@ bool AInventory::Grind(bool items)
 
 void AInventory::BecomeItem ()
 {
-	auto suka = this->GetClass()->TypeName.GetChars();
 	if (!(flags & (MF_NOBLOCKMAP|MF_NOSECTOR)))
 	{
 		UnlinkFromWorld (nullptr);
