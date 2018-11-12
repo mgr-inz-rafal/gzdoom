@@ -89,8 +89,6 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
-	auto beret = a->GetClass()->TypeName.GetChars();
-
 	if(gienek_full_map_loaded)
 	{
 		uint16_t index = a->gienek_index;

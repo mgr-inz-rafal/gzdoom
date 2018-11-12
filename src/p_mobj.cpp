@@ -5006,8 +5006,6 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	}
 
 	// set subsector and/or block links
-	auto dupa = actor->GetClass()->TypeName.GetChars();
-
 	actor->LinkToWorld (nullptr, SpawningMapThing);
 	actor->ClearInterpolation();
 	gienek.add_thing_to_gienek(actor);
