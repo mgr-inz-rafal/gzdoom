@@ -4967,6 +4967,7 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 		actor->Conversation = NULL;
 	}
 
+	gienek.add_thing_to_gienek(actor);
 	actor->SetXYZ(pos);
 	actor->OldRenderPos = { FLT_MAX, FLT_MAX, FLT_MAX };
 	actor->picnum.SetInvalid();
@@ -5008,7 +5009,6 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	// set subsector and/or block links
 	actor->LinkToWorld (nullptr, SpawningMapThing);
 	actor->ClearInterpolation();
-	gienek.add_thing_to_gienek(actor);
 
 	actor->dropoffz = actor->floorz = actor->Sector->floorplane.ZatPoint(pos);
 	actor->ceilingz = actor->Sector->ceilingplane.ZatPoint(pos);
