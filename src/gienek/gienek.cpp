@@ -87,6 +87,24 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 }
 
+void gienek_api::update_player_angle_in_gienek(double angle)
+{
+	if(gienek_full_map_loaded)
+	{
+		int16_t direction = static_cast<int16_t>(angle);
+		if(last_reported_angle != direction)
+		{
+			last_reported_angle = direction;
+			char buf[3];
+			buf[0] = 'g';
+			memcpy(&buf[1], &direction, 2);
+
+			boost::system::error_code ignored_error;
+			boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		}
+	}
+}
+
 void gienek_api::update_thing_pos_in_gienek(AActor* a)
 {
 	if(gienek_full_map_loaded)

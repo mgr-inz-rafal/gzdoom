@@ -73,6 +73,7 @@
 #include "w_wad.h"
 #include "cmdlib.h"
 #include "sbar.h"
+#include "gienek/gienek.h"
 #include "intermission/intermission.h"
 #include "c_console.h"
 #include "c_dispatch.h"
@@ -89,6 +90,8 @@
 #include "actorinlines.h"
 #include "p_acs.h"
 #include "events.h"
+
+extern gienek_api gienek;
 
 static FRandom pr_skullpop ("SkullPop");
 
@@ -2241,6 +2244,12 @@ void P_PlayerThink (player_t *player)
 			player->mo->Angles.Yaw.Degrees, player->cmd.ucmd.buttons,
 			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
 			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
+	}
+
+	// Make sure gienek is update about current player rotation
+	if(player->mo)
+	{
+		gienek.update_player_angle_in_gienek(player->mo->Angles.Yaw.Degrees);
 	}
 
 	// Make unmodified copies for ACS's GetPlayerInput.

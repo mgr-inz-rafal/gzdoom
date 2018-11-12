@@ -9,6 +9,7 @@ struct FLevelLocals;
 // located in the common API
 class gienek_api
 {
+
 public:
 	std::map<std::string, int16_t> typename_to_id_map = {
 		{"DoomPlayer",		29999},
@@ -23,9 +24,12 @@ public:
 		{"Clip",			11}
 	};
 
+private:
 	boost::asio::io_context io_context;
 	boost::asio::ip::tcp::socket gienek_socket {io_context};
 	bool gienek_full_map_loaded;
+	int16_t last_reported_angle { 1 };	// No std::optional, choose the value that is less likely than 0, 90, etc. Still unsafe, though.
+
 public:
 	gienek_api();
 
@@ -33,6 +37,7 @@ public:
 	void add_thing_to_gienek(AActor* a);
 	void remove_thing_from_gienek(uint16_t index);
 	void update_thing_pos_in_gienek(AActor* a);
+	void update_player_angle_in_gienek(double angle);
 	// TODO: This should be renamed to something like "send_map_geometry", since it
 	// will (probably) not care about things
 	void send_map_to_gienek(FLevelLocals* level);
