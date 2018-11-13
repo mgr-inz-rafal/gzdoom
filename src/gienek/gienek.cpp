@@ -115,7 +115,6 @@ void gienek_api::update_thing_pos_in_gienek(AActor* a)
 	int16_t posy = static_cast<int16_t>(a->Y());
 	int16_t posz = static_cast<int16_t>(a->Z());
 	int16_t type;
-	auto classname = a->GetClass()->TypeName.GetChars();
 	if(typename_to_id_map.find(classname) != typename_to_id_map.end())
 	{
 		type = typename_to_id_map[classname];
