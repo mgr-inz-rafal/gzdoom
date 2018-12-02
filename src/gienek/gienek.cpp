@@ -13,14 +13,12 @@ using boost::asio::ip::tcp;
 
 extern std::map<std::string, int16_t> typename_to_id_map;
 
-gienek_command_acceptor::gienek_command_acceptor(boost::asio::io_context& context): _context(context) {}
+gienek_command_acceptor::gienek_command_acceptor(boost::asio::io_context& context, boost::asio::ip::tcp::socket& socket): _context(context), _socket(socket) {}
 
 void gienek_command_acceptor::operator()()
 {
-    tcp::socket socket(_context);
-	/*
-	acceptor = std::make_unique<tcp::acceptor>(tcp::acceptor(context, tcp::endpoint(tcp::v4(), 14)));
-    acceptor->async_accept(socket, [&](const boost::system::error_code& error) {
+    tcp::acceptor acceptor(_context, tcp::endpoint(tcp::v4(), 14));
+    acceptor.async_accept(_socket, [&](const boost::system::error_code& error) {
         if (!error) {
             // Connection established
 			int asd = 0;
@@ -28,9 +26,8 @@ void gienek_command_acceptor::operator()()
         }
     });
 	for(;;) {
-		io_context2.run();
+		_context.run();
 	}
-	*/
 }
 
 gienek_api::gienek_api()

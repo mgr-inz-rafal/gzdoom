@@ -10,8 +10,9 @@ using boost::asio::ip::tcp;
 // located in the common API
 class gienek_command_acceptor {
 	boost::asio::io_context& _context;
+	boost::asio::ip::tcp::socket& _socket;
 public:
-	gienek_command_acceptor(boost::asio::io_context& context);
+	gienek_command_acceptor(boost::asio::io_context& context, boost::asio::ip::tcp::socket& socket);
     void operator()();
 };
 
@@ -37,8 +38,7 @@ private:
 	boost::asio::ip::tcp::socket gienek_reporting_socket {io_context};
 	boost::asio::io_context io_context2;
 	boost::asio::ip::tcp::socket gienek_remote_control_socket {io_context2};
-	std::unique_ptr<tcp::acceptor> acceptor;
-	gienek_command_acceptor cmdacc{io_context2};
+	gienek_command_acceptor cmdacc{io_context2, gienek_remote_control_socket};
 	std::thread cmdacc_thread;
 
 	bool gienek_full_map_loaded;
