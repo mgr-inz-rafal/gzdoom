@@ -13,6 +13,26 @@ using boost::asio::ip::tcp;
 
 extern std::map<std::string, int16_t> typename_to_id_map;
 
+gienek_command_acceptor::gienek_command_acceptor(boost::asio::io_context& context): _context(context) {}
+
+void gienek_command_acceptor::operator()()
+{
+    tcp::socket socket(_context);
+	/*
+	acceptor = std::make_unique<tcp::acceptor>(tcp::acceptor(context, tcp::endpoint(tcp::v4(), 14)));
+    acceptor->async_accept(socket, [&](const boost::system::error_code& error) {
+        if (!error) {
+            // Connection established
+			int asd = 0;
+			++asd;
+        }
+    });
+	for(;;) {
+		io_context2.run();
+	}
+	*/
+}
+
 gienek_api::gienek_api()
 {
 	reset();
@@ -25,7 +45,7 @@ void gienek_api::reset()
 	gienek_indexer = 0;
 }
 
-void gienek_api::Gienek_Init(const char* address)
+void gienek_api::connect_to_gienek(const char* address)
 {
 	std::vector<std::string> parts;
 	boost::split(parts, address, [](char c){return c == ':';});
@@ -35,8 +55,19 @@ void gienek_api::Gienek_Init(const char* address)
 	}
 	tcp::resolver resolver(io_context);
     tcp::resolver::results_type endpoints = resolver.resolve(parts.front(), parts.back());
+    boost::asio::connect(gienek_reporting_socket, endpoints);
+}
 
-    boost::asio::connect(gienek_socket, endpoints);
+void gienek_api::setup_receiving_socket()
+{
+    cmdacc_thread = std::thread(cmdacc);
+	cmdacc_thread.detach();
+}
+
+void gienek_api::Gienek_Init(const char* address)
+{
+	connect_to_gienek(address);
+	setup_receiving_socket();
 }
 
 void gienek_api::add_thing_to_gienek(AActor* a)
@@ -73,7 +104,7 @@ void gienek_api::add_thing_to_gienek(AActor* a)
 		memcpy(&buf[13], &type, 2);
 
 		boost::system::error_code ignored_error;
-		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
 }
 
@@ -84,7 +115,7 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 	memcpy(&buf[1], &index, 2);
 
 	boost::system::error_code ignored_error;
-	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 }
 
 void gienek_api::update_player_angle_in_gienek(double angle)
@@ -100,7 +131,7 @@ void gienek_api::update_player_angle_in_gienek(double angle)
 			memcpy(&buf[1], &direction, 2);
 
 			boost::system::error_code ignored_error;
-			boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 		}
 	}
 }
@@ -135,7 +166,7 @@ void gienek_api::update_thing_pos_in_gienek(AActor* a)
 	memcpy(&buf[13], &type, 2);
 
 	boost::system::error_code ignored_error;
-	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 }
 
 void gienek_api::send_map_to_gienek(FLevelLocals* level)
@@ -159,7 +190,7 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		memcpy(&buf[1], &x, 2);
 		memcpy(&buf[3], &y, 2);
 		boost::system::error_code ignored_error;
-		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
 
 	for (const auto &ssector: level->subsectors)
@@ -168,7 +199,7 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		buf[0] = 'b';
 		memcpy(&buf[1], &ssector.numlines, 2);
 		boost::system::error_code ignored_error;
-		boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
 		int x = ssector.firstline->Index();
 		for(std::size_t i = 0; i < ssector.numlines; ++i, ++x)
@@ -179,7 +210,7 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 			memcpy(&buf[0], &sti, 2);
 			memcpy(&buf[2], &eni, 2);
 			boost::system::error_code ignored_error;
-			boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+			boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 		}
 	}
 
@@ -240,7 +271,7 @@ void gienek_api::start_sending_map()
 	char buf[1];
 	buf[0] = 'x';
 	boost::system::error_code ignored_error;
-	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 
 	map_delivery_in_progress = true;
 }
@@ -250,7 +281,7 @@ void gienek_api::stop_sending_map()
 	char buf[1];
 	buf[0] = 'f';
 	boost::system::error_code ignored_error;
-	boost::asio::write(gienek_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	gienek_full_map_loaded = true;
 
 	map_delivery_in_progress = false;

@@ -4,9 +4,17 @@
 
 class AActor;
 struct FLevelLocals;
+using boost::asio::ip::tcp;
 
 // TODO: Remove all "_to_gienek" suffixex and "gienek_" prefixes, since all is now
 // located in the common API
+class gienek_command_acceptor {
+	boost::asio::io_context& _context;
+public:
+	gienek_command_acceptor(boost::asio::io_context& context);
+    void operator()();
+};
+
 class gienek_api
 {
 
@@ -26,9 +34,18 @@ public:
 
 private:
 	boost::asio::io_context io_context;
-	boost::asio::ip::tcp::socket gienek_socket {io_context};
+	boost::asio::ip::tcp::socket gienek_reporting_socket {io_context};
+	boost::asio::io_context io_context2;
+	boost::asio::ip::tcp::socket gienek_remote_control_socket {io_context2};
+	std::unique_ptr<tcp::acceptor> acceptor;
+	gienek_command_acceptor cmdacc{io_context2};
+	std::thread cmdacc_thread;
+
 	bool gienek_full_map_loaded;
 	int16_t last_reported_angle { 1 };	// No std::optional, choose the value that is less likely than 0, 90, etc. Still unsafe, though.
+
+	void connect_to_gienek(const char* address);
+	void setup_receiving_socket();
 
 public:
 	gienek_api();
