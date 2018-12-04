@@ -6,8 +6,6 @@ class AActor;
 struct FLevelLocals;
 using boost::asio::ip::tcp;
 
-// TODO: Remove all "_to_gienek" suffixex and "gienek_" prefixes, since all is now
-// located in the common API
 class gienek_command_acceptor {
 	boost::asio::io_context& _context;
 	boost::asio::ip::tcp::socket& _socket;
@@ -16,6 +14,8 @@ public:
     void operator()();
 };
 
+// TODO: Remove all "_to_gienek" suffixex and "gienek_" prefixes, since all is now
+// located in the common API
 class gienek_api
 {
 

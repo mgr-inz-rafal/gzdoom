@@ -4,12 +4,14 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <vector>
+#include <chrono>
 using boost::asio::ip::tcp;
 
 #include "actor.h"
 #include "a_pickups.h"
 #include "g_levellocals.h"
 #include "dobject.h"
+#include "c_dispatch.h"
 
 extern std::map<std::string, int16_t> typename_to_id_map;
 
@@ -17,12 +19,30 @@ gienek_command_acceptor::gienek_command_acceptor(boost::asio::io_context& contex
 
 void gienek_command_acceptor::operator()()
 {
+	std::string buffer;
+	buffer.resize(1);
+	using namespace std::chrono_literals;
     tcp::acceptor acceptor(_context, tcp::endpoint(tcp::v4(), 14));
     acceptor.async_accept(_socket, [&](const boost::system::error_code& error) {
         if (!error) {
-            // Connection established
-			int asd = 0;
-			++asd;
+			for(;;)
+			{
+				std::this_thread::sleep_for(4ms);
+				if (!_socket.available()) {
+					continue;
+				}
+				boost::system::error_code incoming_code;
+				boost::asio::read(_socket, boost::asio::buffer(buffer), boost::asio::transfer_at_least(buffer.size()),
+								  incoming_code);
+				if (incoming_code.value()) {
+					throw std::runtime_error(incoming_code.message());
+				}
+
+				if((buffer == "l") || (buffer == "L"))
+				{
+					AddCommandString("+left");
+				}
+			}
         }
     });
 	for(;;) {
