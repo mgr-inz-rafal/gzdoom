@@ -42,6 +42,18 @@ void gienek_command_acceptor::operator()()
 				{
 					AddCommandString("+left");
 				}
+				if((buffer == "r") || (buffer == "R"))
+				{
+					AddCommandString("+right");
+				}
+				if((buffer == "f") || (buffer == "F"))
+				{
+					AddCommandString("+forward");
+				}
+				if((buffer == "b") || (buffer == "B"))
+				{
+					AddCommandString("+back");
+				}
 			}
         }
     });
