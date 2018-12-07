@@ -38,21 +38,45 @@ void gienek_command_acceptor::operator()()
 					throw std::runtime_error(incoming_code.message());
 				}
 
-				if((buffer == "l") || (buffer == "L"))
+				if(buffer == "L")
 				{
 					AddCommandString("+left");
 				}
-				if((buffer == "r") || (buffer == "R"))
+				if(buffer == "l")
+				{
+					AddCommandString("-left");
+				}
+				if(buffer == "R")
 				{
 					AddCommandString("+right");
 				}
-				if((buffer == "f") || (buffer == "F"))
+				if(buffer == "r")
+				{
+					AddCommandString("-right");
+				}
+				if(buffer == "F")
 				{
 					AddCommandString("+forward");
 				}
-				if((buffer == "b") || (buffer == "B"))
+				if(buffer == "f")
+				{
+					AddCommandString("-forward");
+				}
+				if(buffer == "B")
 				{
 					AddCommandString("+back");
+				}
+				if(buffer == "b")
+				{
+					AddCommandString("-back");
+				}
+				if(buffer == "A")
+				{
+					AddCommandString("+attack");
+				}
+				if(buffer == "a")
+				{
+					AddCommandString("-attack");
 				}
 			}
         }
