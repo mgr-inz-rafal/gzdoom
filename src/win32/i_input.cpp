@@ -139,6 +139,7 @@ extern bool CursorState;
 
 extern BOOL paused;
 static bool noidle = false;
+static bool active_in_background = false;
 
 LPDIRECTINPUT8			g_pdi;
 LPDIRECTINPUT			g_pdi3;
@@ -527,16 +528,19 @@ LRESULT CALLBACK WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_ACTIVATEAPP:
-		AppActive = wParam == TRUE;
-		if (wParam)
+		if(!active_in_background)
 		{
-			SetPriorityClass (GetCurrentProcess (), INGAME_PRIORITY_CLASS);
+			AppActive = wParam == TRUE;
+			if (wParam)
+			{
+				SetPriorityClass (GetCurrentProcess (), INGAME_PRIORITY_CLASS);
+			}
+			else if (!noidle && !netgame)
+			{
+				SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
+			}
+			S_SetSoundPaused ((!!i_soundinbackground) || wParam);
 		}
-		else if (!noidle && !netgame)
-		{
-			SetPriorityClass (GetCurrentProcess (), IDLE_PRIORITY_CLASS);
-		}
-		S_SetSoundPaused ((!!i_soundinbackground) || wParam);
 		break;
 
 	case WM_WTSSESSION_CHANGE:
@@ -628,6 +632,7 @@ bool I_InitInput (void *hwnd)
 	atterm (I_ShutdownInput);
 
 	noidle = !!Args->CheckParm ("-noidle");
+	active_in_background = !!Args->CheckParm ("-active_in_background");
 	g_pdi = NULL;
 	g_pdi3 = NULL;
 
