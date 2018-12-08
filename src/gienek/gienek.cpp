@@ -173,6 +173,11 @@ void gienek_api::remove_thing_from_gienek(uint16_t index)
 
 void gienek_api::update_player_angle_in_gienek(double angle)
 {
+	while(angle < 0.0f)
+	{
+		angle += 360.0f;
+	}
+	angle = std::fmod(angle, 360.0f);
 	if(gienek_full_map_loaded)
 	{
 		int16_t direction = static_cast<int16_t>(angle);
@@ -194,7 +199,13 @@ void gienek_api::update_thing_pos_in_gienek(AActor* a)
 	auto classname = a->GetClass()->TypeName.GetChars();
 	uint16_t index = a->gienek_index;
 	int16_t health = a->health;
-	int16_t direction = static_cast<int16_t>(a->Angles.Yaw.Degrees);
+	double angle = a->Angles.Yaw.Degrees;
+	while(angle < 0.0f)
+	{
+		angle += 360.0f;
+	}
+	angle = std::fmod(angle, 360.0f);
+	int16_t direction = static_cast<int16_t>(angle);
 	int16_t posx = static_cast<int16_t>(a->X());
 	int16_t posy = static_cast<int16_t>(a->Y());
 	int16_t posz = static_cast<int16_t>(a->Z());
