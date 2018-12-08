@@ -1797,16 +1797,11 @@ void D_QuitNetGame (void)
 		fclose (debugfile);
 }
 
-#include <fstream>
-
 //
 // TryRunTics
 //
 void TryRunTics (void)
 {
-	std::ofstream out("d:\\dupa.txt", std::ios::app);
-	out << std::endl << std::endl;
-
 	int 		i;
 	int 		lowtic;
 	int 		realtics;
@@ -1816,8 +1811,6 @@ void TryRunTics (void)
 
 	// If paused, do not eat more CPU time than we need, because it
 	// will all be wasted anyway.
-
-	out << "1" << std::endl;
 
 	if (pauseext) 
 		r_NoInterpolate = true;
@@ -1837,15 +1830,11 @@ void TryRunTics (void)
 	realtics = entertic - oldentertics;
 	oldentertics = entertic;
 
-	out << "2" << std::endl;
-
 	// get available tics
 	NetUpdate ();
 
 	if (pauseext)
 		return;
-
-	out << "3" << std::endl;
 
 	lowtic = INT_MAX;
 	numplaying = 0;
@@ -1859,8 +1848,6 @@ void TryRunTics (void)
 		}
 	}
 
-	out << "4" << std::endl;
-
 	if (ticdup == 1)
 	{
 		availabletics = lowtic - gametic;
@@ -1870,8 +1857,6 @@ void TryRunTics (void)
 		availabletics = lowtic - gametic / ticdup;
 	}
 
-	out << "5" << std::endl;
-
 	// decide how many tics to run
 	if (realtics < availabletics-1)
 		counts = realtics+1;
@@ -1880,8 +1865,6 @@ void TryRunTics (void)
 	else
 		counts = availabletics;
 	
-	out << "6" << std::endl;
-
 	// Uncapped framerate needs seprate checks
 	if (counts == 0 && !doWait)
 	{
@@ -1895,10 +1878,8 @@ void TryRunTics (void)
 			P_UnPredictPlayer();
 			P_PredictPlayer(&players[consoleplayer]);
 		}
-		out << "7" << std::endl;
 		return;
 	}
-	out << "8" << std::endl;
 
 	if (counts < 1)
 		counts = 1;
@@ -1909,10 +1890,8 @@ void TryRunTics (void)
 				 realtics, availabletics, counts);
 
 	// wait for new tics if needed
-	out << "9" << std::endl;
 	while (lowtic < gametic + counts)
 	{
-		out << "10" << std::endl;	
 		NetUpdate ();
 		lowtic = INT_MAX;
 
@@ -1940,10 +1919,8 @@ void TryRunTics (void)
 			// Repredict the player for new buffered movement
 			P_UnPredictPlayer();
 			P_PredictPlayer(&players[consoleplayer]);
-			out << "11" << std::endl;	
 			return;
 		}
-		out << "12" << std::endl;	
 	}
 
 	//Tic lowtic is high enough to process this gametic. Clear all possible waiting info
@@ -1953,7 +1930,6 @@ void TryRunTics (void)
 	lastglobalrecvtime = I_GetTime (); //Update the last time the game tic'd over
 
 	// run the count tics
-	out << "13" << std::endl;	
 	if (counts > 0)
 	{
 		P_UnPredictPlayer();
@@ -1971,16 +1947,13 @@ void TryRunTics (void)
 			C_Ticker ();
 			M_Ticker ();
 			G_Ticker();
-			out << "14" << std::endl;	
 			gametic++;
 
 			NetUpdate ();	// check for new console commands
 		}
-		out << "15" << std::endl;	
 		P_PredictPlayer(&players[consoleplayer]);
 		S_UpdateSounds (players[consoleplayer].camera);	// move positional sounds
 	}
-	out << "16" << std::endl;	
 }
 
 void Net_CheckLastReceived (int counts)
