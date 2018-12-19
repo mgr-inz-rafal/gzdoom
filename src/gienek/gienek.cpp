@@ -257,6 +257,14 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
 
+	for (const auto& sector: level->sectors)
+	{
+		char buf[1];
+		buf[0] = 'h';
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
+
 	for (const auto &ssector: level->subsectors)
 	{
 		char buf[3];
