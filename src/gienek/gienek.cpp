@@ -259,8 +259,14 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 
 	for (const auto& sector: level->sectors)
 	{
-		char buf[1];
+		char buf[5];
 		buf[0] = 'h';
+
+		int16_t floor = static_cast<int16_t>(sector.GetPlaneTexZ(sector_t::floor));
+		int16_t ceiling = static_cast<int16_t>(sector.GetPlaneTexZ(sector_t::ceiling));
+		memcpy(&buf[1], &floor, 2);
+		memcpy(&buf[3], &ceiling, 2);
+
 		boost::system::error_code ignored_error;
 		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
