@@ -297,55 +297,6 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		}
 	}
 
-	// Report things
-	/*
-	AActor*	t;
-	for (auto &sec : level->sectors)
-	{
-		t = sec.thinglist;
-		while (t)
-		{
-			uint16_t index = t->gienek_index;
-			int16_t health = t->health;
-			int16_t direction = static_cast<int16_t>(t->Angles.Yaw.Degrees);
-			int16_t posx = static_cast<int16_t>(t->X());
-			int16_t posy = static_cast<int16_t>(t->Y());
-			int16_t posz = static_cast<int16_t>(t->Z());
-			int16_t type;
-			auto classname = t->GetClass()->TypeName.GetChars();
-			if(typename_to_id_map.find(classname) != typename_to_id_map.end())
-			{
-				type = typename_to_id_map[classname];
-			}
-			else
-			{
-				type = 0;
-			}
-			if(type != 0)
-			{
-				// TODO: This is copy&pasted to p_mobj.cpp
-				// Introduce kind of a gienek-client app with
-				// appropriate interface, eg. send_thing()
-
-				char buf[15];
-				buf[0] = 'c';
-				memcpy(&buf[1], &index, 2);
-				memcpy(&buf[3], &health, 2);
-				memcpy(&buf[5], &direction, 2);
-				memcpy(&buf[7], &posx, 2);
-				memcpy(&buf[9], &posy, 2);
-				memcpy(&buf[11], &posz, 2);
-				memcpy(&buf[13], &type, 2);
-
-				boost::system::error_code ignored_error;
-				boost::asio::write(*gienek_global_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
-			}
-
-			t = t->snext;
-		}
-	}
-	*/
-
 	stop_sending_map();
 }
 
