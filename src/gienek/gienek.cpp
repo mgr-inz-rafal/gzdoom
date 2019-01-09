@@ -12,6 +12,7 @@ using boost::asio::ip::tcp;
 #include "g_levellocals.h"
 #include "dobject.h"
 #include "c_dispatch.h"
+#include "p_tags.h"
 
 extern std::map<std::string, int16_t> typename_to_id_map;
 
@@ -259,13 +260,16 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 
 	for (const auto& sector: level->sectors)
 	{
-		char buf[5];
+		char buf[7];
 		buf[0] = 'h';
 
 		int16_t floor = static_cast<int16_t>(sector.GetPlaneTexZ(sector_t::floor));
 		int16_t ceiling = static_cast<int16_t>(sector.GetPlaneTexZ(sector_t::ceiling));
+		int16_t tag = tagManager.GetFirstSectorTag(&sector);
+
 		memcpy(&buf[1], &floor, 2);
 		memcpy(&buf[3], &ceiling, 2);
+		memcpy(&buf[5], &tag, 2);
 
 		boost::system::error_code ignored_error;
 		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
