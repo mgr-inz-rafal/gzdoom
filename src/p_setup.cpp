@@ -4074,8 +4074,6 @@ void P_SetupLevel (const char *lumpname, int position)
 		times[14].Clock();
 		P_SpawnThings(position);
 
-		gienek.send_map_to_gienek(&level);
-
 		for (i = 0; i < MAXPLAYERS; ++i)
 		{
 			if (playeringame[i] && players[i].mo != NULL)
@@ -4286,6 +4284,8 @@ void P_SetupLevel (const char *lumpname, int position)
 	memcpy(&level.loadlines[0], &level.lines[0], level.lines.Size() * sizeof(level.lines[0]));
 	level.loadsides.Resize(level.sides.Size());
 	memcpy(&level.loadsides[0], &level.sides[0], level.sides.Size() * sizeof(level.sides[0]));
+
+	gienek.send_map_to_gienek(&level);
 }
 
 
