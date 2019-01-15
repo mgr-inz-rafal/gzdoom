@@ -258,6 +258,30 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 	}
 
+	for (const auto &l : level->lines)
+	{
+		int16_t x1 = static_cast<int16_t>(l.v1->p.X);
+		int16_t y1 = static_cast<int16_t>(l.v1->p.Y);
+		int16_t x2 = static_cast<int16_t>(l.v2->p.X);
+		int16_t y2 = static_cast<int16_t>(l.v2->p.Y);
+		int16_t tag = tagManager.GetFirstLineID(&l);
+		int16_t type = l.special;
+		int16_t activation = l.activation;
+
+		// Report line to Gienek
+		char buf[15];
+		buf[0] = 'i';
+		memcpy(&buf[1], &x1, 2);
+		memcpy(&buf[3], &y1, 2);
+		memcpy(&buf[5], &x2, 2);
+		memcpy(&buf[7], &y2, 2);
+		memcpy(&buf[9], &tag, 2);
+		memcpy(&buf[11], &type, 2);
+		memcpy(&buf[13], &activation, 2);
+		boost::system::error_code ignored_error;
+		boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+	}
+
 	for (const auto& sector: level->sectors)
 	{
 		char buf[7];
