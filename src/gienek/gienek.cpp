@@ -39,6 +39,14 @@ void gienek_command_acceptor::operator()()
 					throw std::runtime_error(incoming_code.message());
 				}
 
+				if(buffer == "U")
+				{
+					AddCommandString("+use");
+				}
+				if(buffer == "u")
+				{
+					AddCommandString("-use");
+				}
 				if(buffer == "L")
 				{
 					AddCommandString("+left");
