@@ -276,7 +276,8 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		int16_t type = l.special;
 		int16_t activation = l.activation;
 
-		if(type != 0)
+//		if(type != 0)
+		if (1)
 		{
 			// Report line to Gienek
 			char buf[15];
@@ -328,9 +329,11 @@ void gienek_api::send_map_to_gienek(FLevelLocals* level)
 		{
 			int16_t sti = level->segs[x].v1->Index();
 			int16_t eni = level->segs[x].v2->Index();
-			char buf[4];
+			int16_t linei = (level->segs[x].linedef) ? level->segs[x].linedef->Index() : -1;
+			char buf[6];
 			memcpy(&buf[0], &sti, 2);
 			memcpy(&buf[2], &eni, 2);
+			memcpy(&buf[4], &linei, 2);
 			boost::system::error_code ignored_error;
 			boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
 		}
