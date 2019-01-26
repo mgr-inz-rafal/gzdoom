@@ -864,6 +864,12 @@ public:
 
 	void ChangePlaneTexZ(int pos, double val)
 	{
+		// TODO: Find out how to include Gienek here to have the
+		// plane chanegs handled in generic way.
+		// For now, unfortunately, due to strange Windows-related
+		// compilation errors I need to include Gienek
+		// one layer above (dsectoreffect.cpp).
+
 		planes[pos].TexZ += val;
 		SetAllVerticesDirty();
 		CheckOverlap();

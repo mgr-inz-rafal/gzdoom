@@ -367,3 +367,14 @@ int32_t gienek_api::get_next_index()
 {
 	return gienek_indexer++;
 }
+
+void gienek_api::report_ceiling_height_change(int16_t sector_index, int16_t new_height)
+{
+	char buf[5];
+	buf[0] = 'j';
+	memcpy(&buf[1], &sector_index, 2);
+	memcpy(&buf[3], &new_height, 2);
+	boost::system::error_code ignored_error;
+	boost::asio::write(gienek_reporting_socket, boost::asio::buffer(buf, sizeof(buf)), ignored_error);
+}
+

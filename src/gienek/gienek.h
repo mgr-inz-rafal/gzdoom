@@ -1,5 +1,4 @@
 #pragma once
-
 #include <boost/asio.hpp>
 
 class AActor;
@@ -61,6 +60,7 @@ public:
 	void start_sending_map();
 	void reset();
 	int32_t get_next_index();
+	void report_ceiling_height_change(int16_t sector_index, int16_t new_height);
 
 private:
 	int32_t gienek_indexer;

@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "gienek/gienek.h"
+
 #include "dsectoreffect.h"
 #include "p_local.h"
 #include "g_levellocals.h"
@@ -33,6 +35,8 @@
 #include "serializer.h"
 #include "doomstat.h"
 #include "vm.h"
+
+extern gienek_api gienek;
 
 IMPLEMENT_CLASS(DSectorEffect, false, false)
 
@@ -399,6 +403,9 @@ EMoveResult sector_t::MoveCeiling(double speed, double dest, int crush, int dire
 				MoveAttached(crush, -speed, 1, false);
 				return EMoveResult::crushed;
 			}
+
+			gienek.report_ceiling_height_change(this->Index(), this->planes[sector_t::ceiling].TexZ);
+
 			ChangePlaneTexZ(sector_t::ceiling, ceilingplane.HeightDiff (lastpos));
 		}
 		break;
