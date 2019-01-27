@@ -212,6 +212,7 @@ EMoveResult sector_t::MoveFloor(double speed, double dest, int crush, int direct
 			}
 			else
 			{
+				gienek.report_plane_height_change(this->Index(), static_cast<int16_t>(this->planes[sector_t::floor].TexZ), 'k');
 				ChangePlaneTexZ(sector_t::floor, floorplane.HeightDiff(lastpos));
 				AdjustFloorClip();
 			}
@@ -275,6 +276,7 @@ EMoveResult sector_t::MoveFloor(double speed, double dest, int crush, int direct
 				MoveAttached(crush, -speed, 0, false, instant);
 				return EMoveResult::crushed;
 			}
+			gienek.report_plane_height_change(this->Index(), static_cast<int16_t>(this->planes[sector_t::floor].TexZ), 'k');
 			ChangePlaneTexZ(sector_t::floor, floorplane.HeightDiff(lastpos));
 			AdjustFloorClip();
 		}
@@ -361,6 +363,7 @@ EMoveResult sector_t::MoveCeiling(double speed, double dest, int crush, int dire
 				MoveAttached(crush, speed, 1, false);
 				return EMoveResult::crushed;
 			}
+			gienek.report_plane_height_change(this->Index(), static_cast<int16_t>(this->planes[sector_t::ceiling].TexZ), 'j');
 			ChangePlaneTexZ(sector_t::ceiling, ceilingplane.HeightDiff (lastpos));
 		}
 		break;
@@ -404,8 +407,7 @@ EMoveResult sector_t::MoveCeiling(double speed, double dest, int crush, int dire
 				return EMoveResult::crushed;
 			}
 
-			gienek.report_ceiling_height_change(this->Index(), this->planes[sector_t::ceiling].TexZ);
-
+			gienek.report_plane_height_change(this->Index(), static_cast<int16_t>(this->planes[sector_t::ceiling].TexZ), 'j');
 			ChangePlaneTexZ(sector_t::ceiling, ceilingplane.HeightDiff (lastpos));
 		}
 		break;

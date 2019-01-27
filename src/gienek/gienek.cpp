@@ -368,10 +368,10 @@ int32_t gienek_api::get_next_index()
 	return gienek_indexer++;
 }
 
-void gienek_api::report_ceiling_height_change(int16_t sector_index, int16_t new_height)
+void gienek_api::report_plane_height_change(int16_t sector_index, int16_t new_height, char plane)
 {
 	char buf[5];
-	buf[0] = 'j';
+	buf[0] = plane;
 	memcpy(&buf[1], &sector_index, 2);
 	memcpy(&buf[3], &new_height, 2);
 	boost::system::error_code ignored_error;
